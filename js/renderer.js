@@ -12,8 +12,7 @@ import { BEAM_S } from './users.js';
 const BG = '#0b0e14';
 const EDGE_STYLE = 'rgba(255,255,255,0.10)';
 const DYING_COLOR = '224,64,64';
-const FILE_LABEL_WINDOW_S = 4;
-const MAX_FILE_LABELS = 80;
+const DIR_TOUCH_LABEL_S = 4;
 const MAX_DIR_LABELS = 120;
 const DIR_LABEL_MIN_PX = 3;
 const AVATAR_PX = 20;
@@ -93,11 +92,10 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
 
-    // 3. File dots, bucketed by fillStyle. Also collects label candidates and
-    //    updates cached file world positions (used by beams next frame).
+    // 3. File dots, bucketed by fillStyle. Also updates cached file world
+    //    positions (used by beams next frame).
     const dotR = Math.max(3, 1.4 / s);
     const buckets = new Map(); // fillStyle -> [x, y, ...]
-    const labelCandidates = [];
     const pushDot = (style, x, y) => {
       let arr = buckets.get(style);
       if (!arr) buckets.set(style, arr = []);
@@ -119,9 +117,6 @@ export class Renderer {
             const flash = Math.round((1 - age / FILE_FLASH_S) * 8) / 8;
             if (flash > 0) pushDot(`rgba(255,255,255,${flash.toFixed(3)})`, x, y);
           }
-        }
-        if (age < FILE_LABEL_WINDOW_S && labelCandidates.length < 400) {
-          labelCandidates.push(file);
         }
       }
     }
@@ -151,13 +146,23 @@ export class Renderer {
 
     // 5. Directory labels: persistent names above each cluster, sized and
     //    faded by on-screen size, so the tree structure reads even when
-    //    playback is paused. Largest dirs win the label cap.
+    //    playback is paused. Recently touched dirs flash bright (and get a
+    //    label even below the size threshold), then fade back; they win the
+    //    label cap and collision placement, then largest dirs.
     const dirLabelCandidates = [];
     for (const d of sim.tree.allDirs) {
-      if (!d.parent || d.radius * s < DIR_LABEL_MIN_PX || !dirVisible(d)) continue;
+      if (!d.parent || !dirVisible(d)) continue;
+      const touched = wallNow - d.touchWall < DIR_TOUCH_LABEL_S;
+      if (d.radius * s < DIR_LABEL_MIN_PX && !touched) continue;
       dirLabelCandidates.push(d);
     }
-    dirLabelCandidates.sort((a, b) => b.radius - a.radius);
+    dirLabelCandidates.sort((a, b) => {
+      const ta = wallNow - a.touchWall < DIR_TOUCH_LABEL_S;
+      const tb = wallNow - b.touchWall < DIR_TOUCH_LABEL_S;
+      if (ta !== tb) return ta ? -1 : 1;
+      if (ta) return b.touchWall - a.touchWall;
+      return b.radius - a.radius;
+    });
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     let bigFont = true;
@@ -180,28 +185,15 @@ export class Renderer {
       }
       if (clashes) continue;
       drawnRects.push([x0, y0, x0 + w, y1]);
-      const alpha = Math.min(0.5, 0.25 + px / 150);
+      const base = px >= DIR_LABEL_MIN_PX ? Math.min(0.5, 0.25 + px / 150) : 0;
+      const age = wallNow - d.touchWall;
+      const touchAlpha = age < DIR_TOUCH_LABEL_S ? (1 - age / DIR_TOUCH_LABEL_S) * 0.9 : 0;
+      const alpha = Math.max(base, touchAlpha);
       ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
       ctx.fillText(d.name, sx, y1);
     }
 
-    // 6. File labels: most recently touched first, hard cap.
-    labelCandidates.sort((a, b) => b.lastActionWall - a.lastActionWall);
-    ctx.font = '10px system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    const nLabels = Math.min(labelCandidates.length, MAX_FILE_LABELS);
-    for (let i = 0; i < nLabels; i++) {
-      const f = labelCandidates[i];
-      const age = wallNow - f.lastActionWall;
-      const alpha = Math.max(0, 1 - age / FILE_LABEL_WINDOW_S) * 0.8;
-      const [sx, sy] = cam.worldToScreen(f.x, f.y);
-      if (sx < -100 || sx > cam.viewW + 20 || sy < -20 || sy > cam.viewH + 20) continue;
-      ctx.fillStyle = `rgba(220,228,240,${alpha.toFixed(3)})`;
-      ctx.fillText(f.name, sx + dotR * s + 4, sy);
-    }
-
-    // 7. Users: avatar + colored ring + name, constant screen size.
+    // 6. Users: avatar + colored ring + name, constant screen size.
     ctx.font = '10px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
