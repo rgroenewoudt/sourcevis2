@@ -23,6 +23,10 @@ git log --pretty=format:"%at|%an|%ae" --name-status --reverse > gitlog.txt
 
 Gource's own custom log format is auto-detected too. This repo's own history works as a small test input. Verification is manual — load a log in the browser and watch (Playwright screenshots have been used for this; `.playwright-cli/` is gitignored).
 
+## Git workflow
+
+Commit after finishing an implementation task, without being asked. Never push — pushing requires explicit user request every time.
+
 ## Architecture
 
 `js/main.js` is the composition root: it owns the rAF loop and wires `parser → Sim → Camera/Renderer/UI`. `Sim` (js/sim.js) owns all mutable state: the `Tree`, `Layout`, user entities, and beams. The renderer only reads. Per-file responsibilities are listed in README.md's Architecture table.
