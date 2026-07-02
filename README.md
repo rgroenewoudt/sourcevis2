@@ -12,6 +12,23 @@ Zero dependencies, no build step — plain ES modules and Canvas 2D.
    git log --pretty=format:"%at|%an|%ae" --name-status --reverse > gitlog.txt
    ```
 
+   To shrink the file, you can exclude commits from specific authors (e.g. bots and build-service accounts) at export time with a negative-lookahead author match:
+
+   ```
+   git log --perl-regexp --author='^(?!.*(dependabot|renovate|build-service)).*$' \
+     --pretty=format:"%at|%an|%ae" --name-status --reverse > gitlog.txt
+   ```
+
+   The pattern matches against `Name <email>`, so any name or email fragment works. (Excluded authors can also be toggled later in the **Authors** panel without re-exporting.)
+
+   To start the history at a given date instead of the first commit, add `--since` (also combinable with the author filter above):
+
+   ```
+   git log --since=2024-01-01 --pretty=format:"%at|%an|%ae" --name-status --reverse > gitlog.txt
+   ```
+
+   Note that files created before that date will only appear in the visualization once a later commit touches them.
+
 2. Serve this directory with any static file server (ES modules don't load over `file://`):
 
    ```
