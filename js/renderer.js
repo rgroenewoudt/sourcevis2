@@ -15,7 +15,7 @@ const DYING_COLOR = '224,64,64';
 const FILE_LABEL_WINDOW_S = 4;
 const MAX_FILE_LABELS = 80;
 const MAX_DIR_LABELS = 60;
-const AVATAR_PX = 34;
+const AVATAR_PX = 20;
 
 export class Renderer {
   constructor(canvas, camera) {
@@ -74,7 +74,7 @@ export class Renderer {
     ctx.stroke();
 
     // 2. Beams (few at a time; drawn per beam, solid color + age alpha).
-    ctx.lineWidth = 1.8 / s;
+    ctx.lineWidth = 1.0 / s;
     ctx.lineCap = 'round';
     for (const b of sim.beams) {
       const age = wallNow - b.bornWall;
@@ -179,7 +179,7 @@ export class Renderer {
     }
 
     // 7. Users: avatar + colored ring + name, constant screen size.
-    ctx.font = '12px system-ui, sans-serif';
+    ctx.font = '10px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const half = AVATAR_PX / 2;
@@ -193,10 +193,10 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(sx, sy, half + 1, 0, TAU);
       ctx.strokeStyle = u.color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.fillStyle = 'rgba(235,240,248,0.95)';
-      ctx.fillText(u.name, sx, sy + half + 5);
+      ctx.fillStyle = 'rgba(235,240,248,0.9)';
+      ctx.fillText(u.name, sx, sy + half + 3);
       ctx.globalAlpha = 1;
     }
   }
