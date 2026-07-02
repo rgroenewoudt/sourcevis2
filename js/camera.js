@@ -2,7 +2,7 @@
 // drag-pan override. Manual mode never times out on its own — the user
 // returns to auto via the Follow button or a double-click.
 
-const MIN_SCALE = 0.02;
+const MIN_SCALE = 0.002;
 const MAX_SCALE = 8;
 const FIT_MARGIN = 0.85; // fit bounds into 85% of the viewport
 const SMOOTHING = 2.5;
