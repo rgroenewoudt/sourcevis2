@@ -50,16 +50,33 @@ export class Layout {
     this.boostUntil = wallNow + 3;
   }
 
+  /**
+   * Bottom-up pass computing, per dir, the physics bounding circle
+   * (subtreeRadius, a chained overestimate — cheap and rotation-invariant)
+   * and the exact subtree AABB (subMinX/subMaxX/subMinY/subMaxY, used for
+   * cluster labels and camera fitting where the circle's overestimate on
+   * bent trees would be visibly wrong).
+   */
   computeSubtreeRadii(dir) {
     let r = dir.radius;
+    let minX = dir.x - dir.radius, maxX = dir.x + dir.radius;
+    let minY = dir.y - dir.radius, maxY = dir.y + dir.radius;
     for (const child of dir.dirs.values()) {
       const cr = this.computeSubtreeRadii(child);
       const ddx = child.x - dir.x;
       const ddy = child.y - dir.y;
       const d = Math.sqrt(ddx * ddx + ddy * ddy) + cr;
       if (d > r) r = d;
+      if (child.subMinX < minX) minX = child.subMinX;
+      if (child.subMaxX > maxX) maxX = child.subMaxX;
+      if (child.subMinY < minY) minY = child.subMinY;
+      if (child.subMaxY > maxY) maxY = child.subMaxY;
     }
     dir.subtreeRadius = r;
+    dir.subMinX = minX;
+    dir.subMaxX = maxX;
+    dir.subMinY = minY;
+    dir.subMaxY = maxY;
     return r;
   }
 

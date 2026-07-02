@@ -15,6 +15,7 @@ const DYING_COLOR = '224,64,64';
 const DIR_TOUCH_LABEL_S = 4;
 const MAX_DIR_LABELS = 120;
 const DIR_LABEL_MIN_PX = 3;
+const CLUSTER_LABEL_MIN_PX = 18;
 const AVATAR_PX = 15;
 
 export class Renderer {
@@ -146,46 +147,59 @@ export class Renderer {
 
     // 5. Directory labels: persistent names above each cluster, sized and
     //    faded by on-screen size, so the tree structure reads even when
-    //    playback is paused. Recently touched dirs flash bright (and get a
-    //    label even below the size threshold), then fade back; they win the
-    //    label cap and collision placement, then largest dirs.
+    //    playback is paused. Dirs with child dirs name their whole cluster
+    //    (label above the subtree's bounding circle); leaf dirs label their
+    //    own file ring. Recently touched dirs flash bright (and get a label
+    //    even below the size threshold), then fade back; they win the label
+    //    cap and collision placement, then the largest clusters.
     const dirLabelCandidates = [];
     for (const d of sim.tree.allDirs) {
-      if (!d.parent || !dirVisible(d)) continue;
+      if (!d.parent) continue;
+      const cluster = d.dirs.size > 0;
+      // Anchor: top-center of the cluster's exact subtree AABB, or of the
+      // dir's own file ring for leaf dirs.
+      const ax = cluster ? (d.subMinX + d.subMaxX) / 2 : d.x;
+      const topY = cluster ? d.subMinY : d.y - d.radius;
+      const ext = cluster
+        ? Math.max(d.subMaxX - d.subMinX, d.subMaxY - d.subMinY) / 2
+        : d.radius;
+      if (ax + ext < vMinX || ax - ext > vMaxX || topY + 2 * ext < vMinY || topY > vMaxY) continue;
       const touched = wallNow - d.touchWall < DIR_TOUCH_LABEL_S;
-      if (d.radius * s < DIR_LABEL_MIN_PX && !touched) continue;
-      dirLabelCandidates.push(d);
+      const minPx = cluster ? CLUSTER_LABEL_MIN_PX : DIR_LABEL_MIN_PX;
+      if (ext * s < minPx && !touched) continue;
+      dirLabelCandidates.push({ d, cluster, ax, topY, ext, minPx });
     }
     dirLabelCandidates.sort((a, b) => {
-      const ta = wallNow - a.touchWall < DIR_TOUCH_LABEL_S;
-      const tb = wallNow - b.touchWall < DIR_TOUCH_LABEL_S;
+      const ta = wallNow - a.d.touchWall < DIR_TOUCH_LABEL_S;
+      const tb = wallNow - b.d.touchWall < DIR_TOUCH_LABEL_S;
       if (ta !== tb) return ta ? -1 : 1;
-      if (ta) return b.touchWall - a.touchWall;
-      return b.radius - a.radius;
+      if (ta) return b.d.touchWall - a.d.touchWall;
+      return b.ext - a.ext;
     });
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     let bigFont = true;
     ctx.font = '11px system-ui, sans-serif';
     const drawnRects = []; // [x0, y0, x1, y1] of placed labels, larger dirs first
-    for (const d of dirLabelCandidates) {
+    for (const c of dirLabelCandidates) {
       if (drawnRects.length >= MAX_DIR_LABELS) break;
-      const px = d.radius * s;
+      const { d, cluster, ax, topY, ext, minPx } = c;
+      const px = ext * s;
       const big = px >= 22;
       if (big !== bigFont) {
         ctx.font = big ? '11px system-ui, sans-serif' : '9px system-ui, sans-serif';
         bigFont = big;
       }
-      const [sx, sy] = cam.worldToScreen(d.x, d.y);
+      const [sx, sy] = cam.worldToScreen(ax, topY);
       const w = ctx.measureText(d.name).width;
-      const x0 = sx - w / 2, y1 = sy - px - 3, y0 = y1 - (big ? 12 : 10);
+      const x0 = sx - w / 2, y1 = sy - 3, y0 = y1 - (big ? 12 : 10);
       let clashes = false;
       for (const r of drawnRects) {
         if (x0 < r[2] && x0 + w > r[0] && y0 < r[3] && y1 > r[1]) { clashes = true; break; }
       }
       if (clashes) continue;
       drawnRects.push([x0, y0, x0 + w, y1]);
-      const base = px >= DIR_LABEL_MIN_PX ? Math.min(0.5, 0.25 + px / 150) : 0;
+      const base = px >= minPx ? Math.min(cluster ? 0.65 : 0.5, 0.25 + px / 150) : 0;
       const age = wallNow - d.touchWall;
       const touchAlpha = age < DIR_TOUCH_LABEL_S ? (1 - age / DIR_TOUCH_LABEL_S) * 0.9 : 0;
       const alpha = Math.max(base, touchAlpha);

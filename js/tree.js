@@ -59,6 +59,11 @@ export class DirNode {
       this.x = 0;
       this.y = 0;
     }
+    // Exact subtree AABB, maintained by layout's computeSubtreeRadii pass.
+    this.subMinX = this.x - this.radius;
+    this.subMaxX = this.x + this.radius;
+    this.subMinY = this.y - this.radius;
+    this.subMaxY = this.y + this.radius;
   }
 }
 

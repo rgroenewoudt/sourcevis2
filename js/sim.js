@@ -218,9 +218,15 @@ export class Sim {
       maxY = Math.max(maxY, u.y + 60);
     }
     if (!any) {
+      // Exact subtree AABB (the chained subtreeRadius circle overestimates
+      // badly on bent trees and would leave the camera zoomed way out).
       const root = this.tree.root;
-      const r = Math.max(100, root.subtreeRadius);
-      return { minX: root.x - r, maxX: root.x + r, minY: root.y - r, maxY: root.y + r };
+      return {
+        minX: Math.min(root.subMinX, root.x - 100),
+        maxX: Math.max(root.subMaxX, root.x + 100),
+        minY: Math.min(root.subMinY, root.y - 100),
+        maxY: Math.max(root.subMaxY, root.y + 100),
+      };
     }
     return { minX, minY, maxX, maxY };
   }
