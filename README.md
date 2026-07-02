@@ -43,7 +43,7 @@ Gource's own custom log format (`timestamp|user|A/M/D|/path`) is also accepted (
 ## Controls
 
 - **Play/pause** button or Space bar
-- **Speed** 0.25×–8× (the full history targets ~120 seconds at 1×)
+- **Speed** 0.25×–8× (the full history targets ~8 minutes at 1×)
 - **Timeline** slider seeks anywhere in the history (backward seeks rebuild deterministically)
 - **Mouse wheel** zooms, **drag** pans — this switches the camera to manual; click **Follow** (or double-click the canvas) to return to auto-follow
 - **Authors** opens a panel listing every author by commit count; unchecking an author skips their commits entirely — the tree is rebuilt at the current position as if those commits never existed (handy for hiding bots and build-service accounts). Authors are identified by email, so the same person may appear once per email address they committed with.
