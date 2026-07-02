@@ -4,15 +4,16 @@
 //
 // Separation is split into two passes so cost stays near-linear even on
 // repos with thousands of directories:
-//  - sibling pass: pairwise within each parent's children, using full
-//    subtree radii (sibling subtrees must clear each other);
+//  - sibling pass: pairwise within each parent's children, using a fraction
+//    of the subtree radii (branches stay clustered, some overlap allowed);
 //  - global pass: a uniform spatial hash grid over own file-ring radii,
 //    catching unrelated subtrees that drift into each other.
 
 const SPRING_K = 6.0;
 const SIBLING_PUSH = 8.0;
 const GLOBAL_PUSH = 4.0;
-const DIR_PADDING = 30;
+const DIR_PADDING = 12;
+const CLUSTER = 0.3; // fraction of subtree extent kept in the spring rest length
 const DAMPING = 0.85;
 const MAX_SPEED = 600;
 const SETTLE_SPEED = 0.6;
@@ -81,15 +82,19 @@ export class Layout {
     const dirs = this.dirs;
     this.computeSubtreeRadii(this.tree.root);
 
-    // Parent springs (rest length keeps the child's whole subtree clear of
-    // the parent's file rings).
+    // Parent springs. Rest length clears the two file rings plus only a
+    // fraction of the child's subtree extent — subtrees mostly grow outward,
+    // so full bounding-circle clearance would exile deep branches far from
+    // their parent (long edges, even spread). The global pass still prevents
+    // hard file-ring overlaps.
     for (const d of dirs) {
       if (!d.parent || d.settled) continue;
       const dx = d.x - d.parent.x;
       const dy = d.y - d.parent.y;
       let dist = Math.sqrt((dx) * (dx) + (dy) * (dy));
       if (dist < 1) dist = 1;
-      const rest = d.parent.radius + d.subtreeRadius + DIR_PADDING;
+      const rest = d.parent.radius + d.radius + DIR_PADDING
+        + CLUSTER * (d.subtreeRadius - d.radius);
       const f = SPRING_K * (rest - dist);
       d.vx += (dx / dist) * f * DT;
       d.vy += (dy / dist) * f * DT;
@@ -104,7 +109,13 @@ export class Layout {
         for (let j = i + 1; j < kids.length; j++) {
           const b = kids[j];
           if (a.settled && b.settled) continue;
-          this.separate(a, b, a.subtreeRadius + b.subtreeRadius + 10, SIBLING_PUSH);
+          // Fractional subtree clearance keeps branches clustered; the floor
+          // on own radii keeps sibling file rings from visually colliding.
+          const minDist = Math.max(
+            a.radius + b.radius + 12,
+            (a.subtreeRadius + b.subtreeRadius) * 0.55
+          );
+          this.separate(a, b, minDist, SIBLING_PUSH);
         }
       }
     }

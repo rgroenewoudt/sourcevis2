@@ -52,7 +52,7 @@ export class DirNode {
       } else {
         a = this.spinPhase; // children of root: spread over the full circle
       }
-      const d = parent.radius + 40;
+      const d = parent.radius + 24;
       this.x = parent.x + Math.cos(a) * d;
       this.y = parent.y + Math.sin(a) * d;
     } else {
