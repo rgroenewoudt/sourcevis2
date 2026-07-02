@@ -12,7 +12,7 @@ export const FILE_FLASH_S = 1.0;
 export const FILE_DEATH_S = 2.5;
 export const ACTIVE_WINDOW_S = 8.0;
 const MAX_COMMITS_PER_FRAME = 50;
-const TARGET_PLAYBACK_S = 60;
+const TARGET_PLAYBACK_S = 120;
 
 export class Sim {
   constructor(commits) {
