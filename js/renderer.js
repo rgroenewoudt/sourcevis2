@@ -15,7 +15,7 @@ const DYING_COLOR = '224,64,64';
 const DIR_TOUCH_LABEL_S = 4;
 const MAX_DIR_LABELS = 120;
 const DIR_LABEL_MIN_PX = 3;
-const AVATAR_PX = 20;
+const AVATAR_PX = 15;
 
 export class Renderer {
   constructor(canvas, camera) {
@@ -194,7 +194,7 @@ export class Renderer {
     }
 
     // 6. Users: avatar + colored ring + name, constant screen size.
-    ctx.font = '10px system-ui, sans-serif';
+    ctx.font = '9px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const half = AVATAR_PX / 2;
@@ -208,7 +208,7 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(sx, sy, half + 1, 0, TAU);
       ctx.strokeStyle = u.color;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.stroke();
       ctx.fillStyle = 'rgba(235,240,248,0.9)';
       ctx.fillText(u.name, sx, sy + half + 3);
