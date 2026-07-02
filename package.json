@@ -1,0 +1,7 @@
+{
+  "name": "sourcevis",
+  "version": "1.0.0",
+  "description": "HTML5 Gource alternative — animated git history visualization",
+  "type": "module",
+  "private": true
+}

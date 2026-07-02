@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SourceVis — animated git history</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="viz"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="hud-date"></div>
+    <div id="hud-right">
+      <div id="hud-counts"></div>
+      <div id="legend"></div>
+    </div>
+  </div>
+
+  <!-- Control bar -->
+  <div id="controls" class="hidden">
+    <button id="btn-play" title="Pause">⏸</button>
+    <select id="speed-select" title="Playback speed">
+      <option value="0.25">0.25×</option>
+      <option value="0.5">0.5×</option>
+      <option value="1" selected>1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+      <option value="8">8×</option>
+    </select>
+    <input id="seek" type="range" min="0" max="10000" value="0" title="Timeline">
+    <button id="btn-follow" class="active" title="Auto-follow the action (double-click the canvas also re-enables)">Follow</button>
+    <button id="btn-authors" title="Show or skip specific authors">Authors</button>
+    <button id="btn-load" title="Load another log">Load log…</button>
+
+    <div id="authors-panel" class="hidden">
+      <div class="authors-actions">
+        <span>Unchecked authors are skipped</span>
+        <button id="authors-all">All</button>
+        <button id="authors-none">None</button>
+      </div>
+      <div id="authors-list"></div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state">
+    <div class="card">
+      <h1>SourceVis</h1>
+      <p class="tagline">Watch your repository's history unfold — an HTML5 take on Gource.</p>
+      <p>Export your git history with:</p>
+      <div class="command-row">
+        <pre><code id="git-command"></code></pre>
+        <button id="btn-copy" title="Copy command">Copy</button>
+      </div>
+      <p class="hint">Gource custom logs (<code>timestamp|user|A/M/D|/path</code>) work too.</p>
+      <label class="file-button" for="file-input">Choose gitlog.txt</label>
+      <input id="file-input" type="file" accept=".txt,.log,text/plain">
+      <p class="hint">…or drop the file anywhere on this page.</p>
+      <div id="parse-progress" class="hidden">
+        <div id="parse-progress-bar"><div id="parse-progress-fill"></div></div>
+        <span id="parse-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
