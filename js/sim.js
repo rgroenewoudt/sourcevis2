@@ -1,7 +1,8 @@
 // Simulation: advances a sim-time clock through the commit list and mutates
 // the tree, users and beams. Two clocks by design — simTime (unix seconds)
-// drives history, wallTime (seconds) drives every animation, so visuals look
-// identical at any playback speed.
+// drives history, animNow (seconds, advancing at wall rate but frozen while
+// paused) drives every animation, so visuals look identical at any playback
+// speed and the whole scene freezes in place when playback is paused.
 
 import { Tree, FILE_RING_BASE, FILE_RING_STEP } from './tree.js';
 import { Layout } from './layout.js';
@@ -23,6 +24,7 @@ export class Sim {
     this.baseRate = span > 0 ? span / TARGET_PLAYBACK_S : 1;
     this.speed = 1;
     this.simTime = this.minTime;
+    this.animNow = 0; // animation clock: wall-rate, frozen while paused
     this.cursor = 0;
     this.playing = true;
     this.ended = false;
@@ -49,7 +51,7 @@ export class Sim {
   togglePlay() {
     if (this.ended && !this.playing) {
       // Play pressed at the end: restart from the beginning.
-      this.seek(this.minTime, performance.now() / 1000);
+      this.seek(this.minTime);
       this.ended = false;
     }
     this.playing = !this.playing;
@@ -107,7 +109,10 @@ export class Sim {
     return true;
   }
 
-  update(wallDt, wallNow) {
+  update(wallDt) {
+    const animDt = this.playing && !this.ended ? wallDt : 0;
+    this.animNow += animDt;
+    const wallNow = this.animNow;
     if (this.playing && !this.ended) {
       this.simTime += this.rate() * wallDt;
       let applied = 0;
@@ -135,7 +140,7 @@ export class Sim {
       this.layout.step();
       if (wallNow < this.layout.boostUntil) this.layout.step(); // faster convergence after changes
     }
-    updateUsers(this.users, wallNow, wallDt);
+    updateUsers(this.users, wallNow, animDt);
     expireBeams(this.beams, wallNow);
   }
 
@@ -144,7 +149,8 @@ export class Sim {
    * rebuild the tree from scratch and silent-replay (a change is a few Map
    * ops, so even 100k changes replay in well under 100ms).
    */
-  seek(targetTime, wallNow, forceRebuild = false) {
+  seek(targetTime, forceRebuild = false) {
+    const wallNow = this.animNow;
     targetTime = Math.max(this.minTime, Math.min(this.maxTime, targetTime));
     if (targetTime < this.simTime || forceRebuild) {
       // Warm-start the rebuilt tree with current dir positions: the layout
@@ -192,9 +198,9 @@ export class Sim {
    * Replace the excluded-author set and rebuild the tree at the current
    * position, as if the excluded commits never existed.
    */
-  setExcluded(keys, wallNow) {
+  setExcluded(keys) {
     this.excluded = new Set(keys);
-    this.seek(this.simTime, wallNow, true);
+    this.seek(this.simTime, true);
   }
 
   /** World AABB of recently-active nodes + visible users (for the auto camera). */

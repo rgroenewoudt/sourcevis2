@@ -32,9 +32,9 @@ Gource's own custom log format is auto-detected too. This repo's own history wor
 Everything runs on two separate clocks:
 
 - **sim time** — unix seconds from commit timestamps; advances at `baseRate × speed` (full history targets 120 s at 1×). Drives which commits have been applied.
-- **wall time** — `performance.now()/1000`; drives every animation (file flashes, death fades, beams, user fade, camera easing, layout boost).
+- **animation time** — `sim.animNow`, seconds advancing at wall rate but **frozen while paused/ended**; drives every animation (file flashes, death fades, beams, user fade, camera target bounds, layout boost). Pausing freezes the whole scene in place; animations resume mid-fade with no jump. Raw `performance.now()` appears only in main.js's frame-delta and HUD-throttle bookkeeping — never feed it into sim/renderer state.
 
-This is why visuals look identical at any playback speed. Animated state stores *wall* timestamps (`file.lastActionWall`, `dir.touchWall`, `user.lastCommitWall`) while history logic uses *sim* time (`commit.time`, `user.lastCommitSimTime`). Don't mix them; when converting between them (see the user-fade restore in `Sim.seek`), divide/multiply by `sim.rate()`.
+This is why visuals look identical at any playback speed. Animated state stores *animation-clock* timestamps (`file.lastActionWall`, `dir.touchWall`, `user.lastCommitWall`) while history logic uses *sim* time (`commit.time`, `user.lastCommitSimTime`). Don't mix them; when converting between them (see the user-fade restore in `Sim.seek`), divide/multiply by `sim.rate()`.
 
 ### Seeking = deterministic rebuild
 

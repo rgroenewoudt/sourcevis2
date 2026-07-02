@@ -34,7 +34,7 @@ const ui = initUI({
     clearTimeout(seekTimer);
     seekTimer = setTimeout(() => {
       const t = sim.minTime + fraction * (sim.maxTime - sim.minTime);
-      sim.seek(t, performance.now() / 1000);
+      sim.seek(t);
     }, SEEK_DEBOUNCE_MS);
   },
   onFollow() {
@@ -46,7 +46,7 @@ const ui = initUI({
     // Debounced: each change rebuilds the tree at the current position.
     clearTimeout(authorsTimer);
     authorsTimer = setTimeout(() => {
-      sim.setExcluded(excludedKeys, performance.now() / 1000);
+      sim.setExcluded(excludedKeys);
       if (excludedKeys.length > 0) {
         ui.toast(`Skipping commits from ${excludedKeys.length} author${excludedKeys.length > 1 ? 's' : ''}`);
       }
@@ -155,9 +155,11 @@ function tick() {
   prevWall = wallNow;
 
   if (sim) {
-    sim.update(wallDt, wallNow);
-    camera.update(wallDt, sim.activeBounds(wallNow));
-    renderer.draw(sim, wallNow);
+    sim.update(wallDt);
+    // Animations (and the camera's target bounds) run on the sim's animation
+    // clock, which freezes while paused — the frame goes fully static.
+    camera.update(wallDt, sim.activeBounds(sim.animNow));
+    renderer.draw(sim, sim.animNow);
 
     if (wallNow - hudAt > HUD_INTERVAL_S) {
       hudAt = wallNow;
