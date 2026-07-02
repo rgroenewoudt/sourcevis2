@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0b0e14"/>
+  <g stroke="#ffffff" stroke-opacity="0.28" stroke-width="2.5" stroke-linecap="round">
+    <line x1="32" y1="32" x2="15" y2="18"/>
+    <line x1="32" y1="32" x2="50" y2="15"/>
+    <line x1="32" y1="32" x2="46" y2="48"/>
+    <line x1="32" y1="32" x2="14" y2="44"/>
+  </g>
+  <!-- directory nodes -->
+  <circle cx="15" cy="18" r="4" fill="#f1e05a"/>
+  <circle cx="50" cy="15" r="4" fill="#3178c6"/>
+  <circle cx="46" cy="48" r="4" fill="#e34c26"/>
+  <circle cx="14" cy="44" r="4" fill="#886fbf"/>
+  <!-- orbiting file dots -->
+  <circle cx="8" cy="12" r="2.2" fill="#f1e05a" fill-opacity="0.85"/>
+  <circle cx="20" cy="9" r="2.2" fill="#f1e05a" fill-opacity="0.85"/>
+  <circle cx="57" cy="9" r="2.2" fill="#3178c6" fill-opacity="0.85"/>
+  <circle cx="54" cy="23" r="2.2" fill="#3178c6" fill-opacity="0.85"/>
+  <circle cx="54" cy="54" r="2.2" fill="#e34c26" fill-opacity="0.85"/>
+  <circle cx="7" cy="51" r="2.2" fill="#886fbf" fill-opacity="0.85"/>
+  <!-- root -->
+  <circle cx="32" cy="32" r="5.5" fill="#eef2f8"/>
+</svg>
