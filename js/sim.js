@@ -131,8 +131,10 @@ export class Sim {
       }
     }
     this.tree.reap(wallNow, FILE_DEATH_S);
-    this.layout.step();
-    if (wallNow < this.layout.boostUntil) this.layout.step(); // faster convergence after changes
+    if (this.playing) {
+      this.layout.step();
+      if (wallNow < this.layout.boostUntil) this.layout.step(); // faster convergence after changes
+    }
     updateUsers(this.users, wallNow, wallDt);
     expireBeams(this.beams, wallNow);
   }
