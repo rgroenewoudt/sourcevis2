@@ -4,6 +4,8 @@ An HTML5 alternative to [Gource](https://github.com/acaudwell/Gource): upload a 
 
 Zero dependencies, no build step — plain ES modules and Canvas 2D.
 
+**Live demo:** https://groenewoudt.net/sourcevis2
+
 ## Quick start
 
 1. Export your repository's history:
